@@ -1,0 +1,1 @@
+mpic++ ./includes/*.h ./src/*.cpp ./test_functions/log_reg_random.h utils/results.cpp main.cpp
