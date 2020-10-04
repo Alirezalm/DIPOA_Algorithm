@@ -8,8 +8,8 @@
 #include "../includes/cut_generation.h"
 #include <ilcplex/ilocplex.h>
 
-Vec  master_milp(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int &current_iter);
-IloExpr dot_prod(Vec &grad, IloNumVarArray &x, Vec &x_k, int &n);
+Vec  master_milp(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut);
+IloExpr dot_prod(Vec &grad, IloNumVarArray &x, Vec &x_k, IloEnv env, int &n);
 
 
 

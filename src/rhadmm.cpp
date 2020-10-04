@@ -29,7 +29,7 @@ HessType x_step_hess(HessType &hess, Scalar &rho) {
 }
 
 
-Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec &delta) {
+Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta) {
 
     const int max_iter = 500; // Maximum number of iterations
     const int n = x.size();
@@ -47,7 +47,7 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
     ObjType f_x;
     GradType g_x;
     HessType Hess_x;
-    Scalar eps = 1e-3;
+    Scalar eps = 1e-2;
     Scalar r = 1, s = 1; Scalar t = 1;
     Vec sum(n,1); sum.setZero();
     for (int i = 0; i < max_iter; ++i) {

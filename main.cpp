@@ -10,7 +10,11 @@ int main(int argc, char *argv[]){
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &total);
     if (rank == 0) cout << "MPI IMPLEMENTATION OF ADMM ALGORITHM FOR " << total << " NODES" << endl;
-    int m = 20, n = 5;
+    int m = 1000, n = 30;
+//    cout << "dataset size for node: " << rank <<endl;
+//    std :: cin >> m >> n;
+//    cout << "Lambda: " << endl;
+
 
     Mat X = Mat::Random(m, n);
     Vec theta = Vec::Random(n, 1);
@@ -24,19 +28,21 @@ int main(int argc, char *argv[]){
         }
     }
 
-    Scalar lambda = 1e-4;
+    Scalar lambda = 1e-2;
     ObjType obj_func = log_reg_obj(X, y, m, lambda);
     GradType grad_func = log_reg_grad(X, y, lambda);
     HessType hess_func = log_reg_hess(X, lambda);
     Vec init (n,1);
     init.setRandom();
-    Scalar M = 0.01;
-    Vec delta (n,1); delta.setOnes();
+    Scalar M = 1;
+    int kappa = n - 5;
+    Vec delta (n,1); delta.setZero();
     int N = total;
-    int kappa = total ;
+
     DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M);
-    Problem.solve(delta, rank);
-    cout << "Done" << endl;
+    Vec x = Problem.solve(delta, rank);
+    if (rank == 0) cout << "x "<< x << endl;
+    if (rank == 0) cout << "delta "<< delta << endl;
     MPI_Finalize();
     return 0;
 }

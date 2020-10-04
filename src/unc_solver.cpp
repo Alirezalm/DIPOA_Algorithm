@@ -31,7 +31,7 @@ Vec conjugate_gradient(const Mat &A, const Vec &b, Vec x) {
     Scalar rho = _rho * _rho, rho_old = rho, rho_old_ = 1;
     Scalar alpha; const Scalar b_norm = b.norm();
     Vec p;
-    const int max_iter = 10;
+    const int max_iter = 200;
     const Scalar eps = 1e-3;
     int iter = 1;
     while ((sqrt(rho) > eps * b_norm) && iter <= max_iter){
@@ -59,7 +59,7 @@ Vec conjugate_gradient(const Mat &A, const Vec &b, Vec x) {
 Vec truncated_newton(ObjType &obj_func, GradType &grad, HessType &hess, Vec &x) {
 
     const int n = x.size();
-    const int max_iter = 500;
+    const int max_iter = 1000;
     const Scalar eps = 1e-4;
     Scalar t;
     Vec step(n,1), g = grad(x);

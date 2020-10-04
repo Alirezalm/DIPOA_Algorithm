@@ -15,9 +15,6 @@ CutStorage::CutStorage(vector<Scalar> &obj_initial_storage, vector<Vec> &grad_in
 void CutStorage::add_cut_f(Scalar local_f, int current_iter) {
 
     obj_value_storage[current_iter] = local_f;
-//    for (int i = 0; i < current_iter ; ++i) {
-//        cout << obj_value_storage[i] << endl;
-//    }
 }
 
 void CutStorage::add_cut_grad(Vec &local_grad, int current_iter) {
