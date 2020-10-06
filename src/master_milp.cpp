@@ -5,8 +5,16 @@
 #include "../includes/master_milp.h"
 
 
+IloExpr quad_cut_expr(IloNumVarArray &x, Vec &x_k, IloEnv env,  int &n) {
+    IloExpr  my_sum(env);
+    for (int i = 0; i < n; ++i) {
+        my_sum += IloPower((x[i] - x_k[i]),2);
+    }
+    return my_sum;
+}
 
-Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut) {
+Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
+                Scalar &lambda, double &elapsed_time ) {
 
     int n = StoragePool.x_storage[0].size();
 
@@ -39,15 +47,16 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
     int k = -1;
     for (int j = 0; j < current_iter * N; ++j) {
             k += 1;
+//            cout << "k "<< k << " j: " << j << endl;
             dot = dot_prod(StoragePool.grad_storage[j], X[k], StoragePool.x_storage[j], env, n);
-            model.add(alpha[k] >= StoragePool.obj_value_storage[j] + dot);
+            model.add(alpha[k] >= StoragePool.obj_value_storage[j] + dot);// +  1 *0.5 * lambda * quad_cut_expr(X[k], StoragePool.x_storage[j], env, n));
             if (k == N - 1) k = -1;
 
     }
 
     for (int j = 0; j < N; ++j) {
         for (int i = 0; i < n; ++i) {
-            model.add(X[j][i] == z[i]);
+            model.add(IloAbs(X[j][i] - z[i]) == 0);
         }
     }
 
@@ -66,10 +75,17 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 //
 
     IloCplex cplex(model);
+//
     cplex.setParam(IloCplex::Param::MIP::Display , 0);
     cplex.setParam(IloCplex::Param::ParamDisplay, 0);
-    NumCut = cplex.getNrows();
+//    cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-2);
+
+    NumCut = current_iter * N;
+    auto start = std :: chrono ::high_resolution_clock::now(); // start measuring time
     cplex.solve();
+    auto end = std :: chrono ::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    elapsed_time = duration.count();
     Vec _delta(n,1);
     for (int i = 0; i < n; ++i) {
         _delta[i] = abs(cplex.getValue(delta[i]));

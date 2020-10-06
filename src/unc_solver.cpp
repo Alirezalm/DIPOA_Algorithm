@@ -32,7 +32,7 @@ Vec conjugate_gradient(const Mat &A, const Vec &b, Vec x) {
     Scalar alpha; const Scalar b_norm = b.norm();
     Vec p;
     const int max_iter = 200;
-    const Scalar eps = 1e-3;
+    const Scalar eps = 1e-2;
     int iter = 1;
     while ((sqrt(rho) > eps * b_norm) && iter <= max_iter){
 
@@ -56,28 +56,29 @@ Vec conjugate_gradient(const Mat &A, const Vec &b, Vec x) {
     return x;
 }
 
-Vec truncated_newton(ObjType &obj_func, GradType &grad, HessType &hess, Vec &x) {
+Vec truncated_newton(ObjType &obj_func, GradType &grad, HessType &hess, Vec x) {
 
     const int n = x.size();
-    const int max_iter = 1000;
-    const Scalar eps = 1e-4;
-    Scalar t;
-    Vec step(n,1), g = grad(x);
-    Scalar f, err = g.norm();
+    const int max_iter = 100;
+    const Scalar eps = 1e-2;
+    Scalar t = 1;
+    Vec step(n,1);
+    Scalar f, err = 10;
     Mat H(n, n);
     x.setZero();
+    Vec g(n,1);
     int iter = 0;
 
-    while ((err > eps) && (iter <= max_iter)){
+    while ((err > eps)){
         ++iter;
 //        cout << iter << " " <<err << " " << t <<endl;
 //        f = obj_func(x);
         g = grad(x);
         H = hess(x);
 
-//        Eigen::ConjugateGradient<Mat> cg(H);
-        step = conjugate_gradient(H, -g, x);
-//         step = cg.solve(-g);
+        Eigen::ConjugateGradient<Mat> cg(H);
+//        step = conjugate_gradient(H, -g, x);
+         step = cg.solve(-g);
         t = line_search(obj_func, grad, step, x);
         x += t * step;
 

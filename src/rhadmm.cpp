@@ -29,27 +29,32 @@ HessType x_step_hess(HessType &hess, Scalar &rho) {
 }
 
 
-Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta) {
+Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta, int &max_iter_num) {
 
-    const int max_iter = 500; // Maximum number of iterations
+    const int max_iter = 1000; // Maximum number of iterations
     const int n = x.size();
+
     Vec y(n, 1), z(n, 1), z_old(n, 1);
-    x.setRandom();
+    x.setZero();
     y.setZero();
     z.setZero();
     z_old.setZero();
-    Scalar rho = 10;
-    int exit_flag = 0;
+
+    Scalar rho = 300;
     Vec x_rcv(n, 1), y_rcv(n, 1), z_rcv(n, 1);
     int max_nodes;
     MPI_Comm_size(MPI_COMM_WORLD, &max_nodes);
     MPI_Status status;
+
     ObjType f_x;
     GradType g_x;
     HessType Hess_x;
-    Scalar eps = 1e-2;
+
+    Scalar eps = 1e-3;
     Scalar r = 1, s = 1; Scalar t = 1;
+
     Vec sum(n,1); sum.setZero();
+
     for (int i = 0; i < max_iter; ++i) {
         f_x = x_step_obj(obj, y, z, rho);
         g_x = x_step_grad(grad, y, z, rho);
@@ -57,7 +62,6 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
         x = truncated_newton(f_x, g_x, Hess_x, x);
 
         z_old = z;
-//        MPI_Barrier(MPI_COMM_WORLD);
         sum = x + (1/rho) * y;
         MPI_Barrier(MPI_COMM_WORLD);
         MPI_Reduce(sum.data(), z_rcv.data(), n, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
@@ -67,21 +71,22 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
             z = (1.0 / max_nodes) * z_rcv;
             z = (M * delta).cwiseMin((-M * delta).cwiseMax(z));
         }
-        MPI_Barrier(MPI_COMM_WORLD);
+
         MPI_Bcast(z.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
         y +=  rho * (x - z);
+        r = (x - z).norm();
+        s = pow(rho,2) * max_nodes * (z_old - z).norm();
 
-        r = (x - z).squaredNorm();
-        s = rho * (z_old - z).squaredNorm();
         MPI_Reduce(&r, &t, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Bcast(&t, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
-//        if (rank == 0) cout<< "iter: " << i << " r: " << r << " s: " << s <<endl;
-        if ((t <= eps) && (rho * sqrt(max_nodes) * s <= eps)){
-
+//        if (rank == 0) cout<< "iter: " << i << " t: " << t << " s: " << s << " f: " << obj(x) <<
+//        " z: " << z.norm() << " z_old " << z_old.norm() << " x: " << x.norm() <<endl;
+        if ((t <= eps) && ( s <= (eps/2.0))){
+            max_iter_num = i;
             break;
 
         }
@@ -90,6 +95,8 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
     }
 
     MPI_Barrier(MPI_COMM_WORLD);
-    return x;
+
+//    x = (M * delta).cwiseMin((-M * delta).cwiseMax(x));
+    return z;
 }
 

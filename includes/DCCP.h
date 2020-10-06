@@ -4,15 +4,19 @@
 
 #ifndef DCCP_DCCP_H
 #define DCCP_DCCP_H
+
 #include "external_libs.h"
 #include "rhadmm.h"
 
-class  DCCP{
-
+class DCCP {
+/*
+ * Distributed Cardinality Constrained Programming (DCCP) problem class.
+ */
 public:
-    DCCP(ObjType &obj,  GradType &grad,  HessType &hess,  int &N,  int &kappa,  Scalar &M);
+    DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Scalar &M,
+         Scalar &lambda); // default constructor
 
-    Vec solve(Vec &delta,  int& rank);
+    Vec dipoa(Vec &delta, int &rank); //invoking DIPOA
 
     int getN() const;
 
@@ -20,13 +24,19 @@ public:
 
     Scalar getM() const;
 
+    Scalar getLambda() const;
+
+    void setLambda(Scalar lambda);
 private:
     int N;
     int kappa;
+    Scalar lambda;
     Scalar M;
     ObjType obj;
     GradType grad;
     HessType hess;
+
+
 };
 
 

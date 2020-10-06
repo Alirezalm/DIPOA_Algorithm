@@ -11,7 +11,7 @@ ObjType x_step_obj (ObjType &f, Vec &y, Vec &z, Scalar &rho);
 GradType x_step_grad (GradType &grad, Vec &y, Vec &z, Scalar &rho);
 HessType x_step_hess (HessType &hess, Scalar &rho);
 
-Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta);
+Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta,  int &max_iter_num);
 
 
 

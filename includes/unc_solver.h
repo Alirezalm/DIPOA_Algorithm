@@ -10,7 +10,7 @@
 
 Vec conjugate_gradient(const Mat &A, const Vec &b, Vec x);
 
-Vec truncated_newton(ObjType &obj_func, GradType &grad, HessType &hess, Vec &x);
+Vec truncated_newton(ObjType &obj_func, GradType &grad, HessType &hess, Vec x);
 
 
 #endif //DIPOA_UNC_SOLVER_H

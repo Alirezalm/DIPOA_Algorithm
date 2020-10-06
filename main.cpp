@@ -1,25 +1,34 @@
-// DIPOA Test file
+/**
+ * Distributed logistic regression test file for the DIPOA algorithm.
+ * @author Alireza Olama
+ * e-mail: alireza.lm69@gmail.com
+ * @mainpage https://github.com/Alirezalm
+ * @
+ */
 #include "includes/DCCP.h"
 #include "test_functions/log_reg_random.h"
 
-int main(int argc, char *argv[]){
+int main(int argc, char *argv[]) {
+
     MPI_Init(&argc, &argv);
 
     srand(clock());
     int rank, total;
-    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    MPI_Comm_size(MPI_COMM_WORLD, &total);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank); // get MPI rank
+    MPI_Comm_size(MPI_COMM_WORLD, &total); // get MPI size
     if (rank == 0) cout << "MPI IMPLEMENTATION OF ADMM ALGORITHM FOR " << total << " NODES" << endl;
-    int m = 1000, n = 30;
-//    cout << "dataset size for node: " << rank <<endl;
-//    std :: cin >> m >> n;
-//    cout << "Lambda: " << endl;
-
-
+    int m = 1000, n = 20;
+    if (rank == 0) {
+        cout << "dataset info: " << endl;
+        cout << "total number of rows and columns " << total * m << " x " << n << endl;
+        cout << "total number of rows and columns per node: " << m << " x " << n << endl;
+        cout << "total size: " << n * total * m * 8 * 1e-6 << " mb" << endl;
+        cout << "total size per node: " << n * m * 8 * 1e-6 << " mb" << endl;
+    }
+    // Random data generation
     Mat X = Mat::Random(m, n);
     Vec theta = Vec::Random(n, 1);
     Vec y = Vec::Random(m, 1);
-
     for (int i = 0; i < m; ++i) {
         if (y[i] <= 0) {
             y[i] = 1.0;
@@ -28,21 +37,22 @@ int main(int argc, char *argv[]){
         }
     }
 
-    Scalar lambda = 1e-2;
-    ObjType obj_func = log_reg_obj(X, y, m, lambda);
-    GradType grad_func = log_reg_grad(X, y, lambda);
-    HessType hess_func = log_reg_hess(X, lambda);
-    Vec init (n,1);
-    init.setRandom();
-    Scalar M = 1;
-    int kappa = n - 5;
-    Vec delta (n,1); delta.setZero();
-    int N = total;
+    // problem parameters and functions
+    Scalar M = 0.05;
+    int kappa = 10;
+    Scalar lambda = 1e-4; //regularization parameter
+    ObjType obj_func = log_reg_obj(X, y, m, lambda); //logistic objective function
+    GradType grad_func = log_reg_grad(X, y, lambda); // logistic gradient
+    HessType hess_func = log_reg_hess(X, lambda); // logistic hessian
 
-    DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M);
-    Vec x = Problem.solve(delta, rank);
-    if (rank == 0) cout << "x "<< x << endl;
-    if (rank == 0) cout << "delta "<< delta << endl;
+    Vec delta(n, 1); //initially feasible binary variables for OA algorithm
+    delta.setZero();
+    int N = total;
+    // creating DCCP problem
+    DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M, lambda);
+    Vec x = Problem.dipoa(delta, rank); // solving the problem
+    if (rank == 0) cout << "x " << x << endl;
+//    if (rank == 0) cout << "delta " << delta << endl;
     MPI_Finalize();
     return 0;
 }
