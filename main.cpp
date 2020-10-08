@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // get MPI rank
     MPI_Comm_size(MPI_COMM_WORLD, &total); // get MPI size
     if (rank == 0) cout << "MPI IMPLEMENTATION OF ADMM ALGORITHM FOR " << total << " NODES" << endl;
-    int m = 1000, n = 20;
+    int m = 1250, n = 100;
     if (rank == 0) {
         cout << "dataset info: " << endl;
         cout << "total number of rows and columns " << total * m << " x " << n << endl;
@@ -27,6 +27,9 @@ int main(int argc, char *argv[]) {
     }
     // Random data generation
     Mat X = Mat::Random(m, n);
+    for (int i = 0; i < n; ++i) {
+        X.col(i) = X.col(i) / X.col(i).norm();
+    }
     Vec theta = Vec::Random(n, 1);
     Vec y = Vec::Random(m, 1);
     for (int i = 0; i < m; ++i) {
@@ -38,9 +41,9 @@ int main(int argc, char *argv[]) {
     }
 
     // problem parameters and functions
-    Scalar M = 0.05;
+    Scalar M = 0.9;
     int kappa = 10;
-    Scalar lambda = 1e-4; //regularization parameter
+    Scalar lambda = 0.5; //regularization parameter
     ObjType obj_func = log_reg_obj(X, y, m, lambda); //logistic objective function
     GradType grad_func = log_reg_grad(X, y, lambda); // logistic gradient
     HessType hess_func = log_reg_hess(X, lambda); // logistic hessian
@@ -50,9 +53,11 @@ int main(int argc, char *argv[]) {
     int N = total;
     // creating DCCP problem
     DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M, lambda);
+//    delta = Problem.sfp(theta, rank);
     Vec x = Problem.dipoa(delta, rank); // solving the problem
-    if (rank == 0) cout << "x " << x << endl;
-//    if (rank == 0) cout << "delta " << delta << endl;
+
+//    if (rank == 0) cout << "x " << x << endl;
+//    if (rank == 0) cout << hess_func(theta).eigenvalues().real().minCoeff() << endl;
     MPI_Finalize();
     return 0;
 }

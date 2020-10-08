@@ -18,6 +18,8 @@ public:
 
     Vec dipoa(Vec &delta, int &rank); //invoking DIPOA
 
+    Vec sfp(Vec &x, int &rank);
+
     int getN() const;
 
     Scalar getKappa() const;

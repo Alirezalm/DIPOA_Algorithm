@@ -29,7 +29,7 @@ HessType x_step_hess(HessType &hess, Scalar &rho) {
 }
 
 
-Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta, int &max_iter_num) {
+Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scalar &M, Vec delta, int &max_iter_num,  bool sfp) {
 
     const int max_iter = 1000; // Maximum number of iterations
     const int n = x.size();
@@ -40,7 +40,7 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
     z.setZero();
     z_old.setZero();
 
-    Scalar rho = 300;
+    Scalar rho = 2;
     Vec x_rcv(n, 1), y_rcv(n, 1), z_rcv(n, 1);
     int max_nodes;
     MPI_Comm_size(MPI_COMM_WORLD, &max_nodes);
@@ -69,7 +69,14 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
         if (rank == 0){
             z_rcv.resize(n, 1);
             z = (1.0 / max_nodes) * z_rcv;
-            z = (M * delta).cwiseMin((-M * delta).cwiseMax(z));
+            if (sfp){
+                Vec _bin_temp (n,1); _bin_temp.setOnes();
+
+                z = (M * _bin_temp).cwiseMin((-M * _bin_temp).cwiseMax(z));
+            }else{
+                z = (M * delta).cwiseMin((-M * delta).cwiseMax(z));
+            }
+
         }
 
         MPI_Bcast(z.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);

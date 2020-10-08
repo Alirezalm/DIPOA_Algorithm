@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 using std::vector;
 using Scalar = typename Eigen::MatrixXd::Scalar ;
-using Mat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::ColMajor>;
+using Mat = Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 using Vec = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Eigen::ColMajor>;
 using Ind = typename Eigen::MatrixXd::Index ;
 
