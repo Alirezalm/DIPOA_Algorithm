@@ -6,6 +6,7 @@
 #define DCCP_DCCP_H
 
 #include "external_libs.h"
+#include "results.h"
 #include "rhadmm.h"
 
 class DCCP {
@@ -16,7 +17,7 @@ public:
     DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Scalar &M,
          Scalar &lambda); // default constructor
 
-    Vec dipoa(Vec &delta, int &rank); //invoking DIPOA
+    Results dipoa(Vec &delta, int &rank, bool display); //invoking DIPOA
 
     Vec sfp(Vec &x, int &rank);
 

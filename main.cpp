@@ -54,9 +54,9 @@ int main(int argc, char *argv[]) {
     // creating DCCP problem
     DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M, lambda);
 //    delta = Problem.sfp(theta, rank);
-    Vec x = Problem.dipoa(delta, rank); // solving the problem
+    Results res = Problem.dipoa(delta, rank, true); // solving the problem
 
-//    if (rank == 0) cout << "x " << x << endl;
+    if (rank == 0) res.print();
 //    if (rank == 0) cout << hess_func(theta).eigenvalues().real().minCoeff() << endl;
     MPI_Finalize();
     return 0;

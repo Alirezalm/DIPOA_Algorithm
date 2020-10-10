@@ -6,7 +6,9 @@
 #include "../includes/cut_generation.h"
 #include "../includes/master_milp.h"
 
+
 DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Scalar &M, Scalar &lambda) {
+
     this->obj = obj;
     this->grad = grad;
     this->hess = hess;
@@ -16,8 +18,8 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
     this->lambda = lambda;
 }
 
-Vec DCCP::dipoa(Vec &delta, int &rank) {
-    double eps = 1e-4;
+Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
+    double eps = 1e-3;
     int max_nodes;
 
     MPI_Status status;
@@ -43,7 +45,8 @@ Vec DCCP::dipoa(Vec &delta, int &rank) {
     vector<Vec> grad_val_storage(max_iter * max_nodes);
     vector<Vec> x_val_storage(max_iter * max_nodes);
     CutStorage StoragePool(obj_val_storage, grad_val_storage, x_val_storage, eig_val_storage); // storage pool class
-
+    Results res;
+    SolverData solver_status;
     double elapse_time;
     double master_time;
 
@@ -52,12 +55,14 @@ Vec DCCP::dipoa(Vec &delta, int &rank) {
     double _ub_temp;
 
     double err;
+    auto start_ccp = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < max_iter; ++i) {//main loop
 
         auto start = std::chrono::high_resolution_clock::now();
         x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
         auto end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
         if (rank == 0) elapse_time = duration.count();
 
         // computing local information
@@ -69,7 +74,7 @@ Vec DCCP::dipoa(Vec &delta, int &rank) {
 
             MPI_Send(&local_obj, 1, MPI_DOUBLE, 0, 50, MPI_COMM_WORLD);
             MPI_Send(local_grad.data(), n, MPI_DOUBLE, 0, 60, MPI_COMM_WORLD);
-            MPI_Send(&local_min_eig, 1 , MPI_DOUBLE, 0, 600, MPI_COMM_WORLD);
+            MPI_Send(&local_min_eig, 1, MPI_DOUBLE, 0, 600, MPI_COMM_WORLD);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
@@ -96,32 +101,79 @@ Vec DCCP::dipoa(Vec &delta, int &rank) {
             }
             ub = std::min(ub, _ub_temp); // updating the upper bound
 
-            delta = master_milp(StoragePool, max_nodes, M, kappa, i + 1, lb, NumCut, lambda, master_time);
-            err = (ub - lb)/(ub + 1e-8);
-            // print the status
-            std::cerr.precision(5);
-            std::cerr.fill();
-//            std :: cerr.setf(std::ios::scientific);
-            std::cerr.setf(std::ios::showpos);
-            std::cerr << "Iter " << i << " lb " << lb << " ub " << ub << " rel-err " << err << " abs-err " << ub - lb<< " NumCut "
-                      << NumCut
-                      << " StorageSize " << ((i + 1) * (N + 2 * (N * n)) * 8) * 1e-6 << " mb" <<
-                      " PrimalIter " << max_iter_rhadmm << " MIPTime "
-                      << master_time << "ms" << " NLPTime " << elapse_time << " ms" << endl;
+            delta = master_milp(StoragePool, max_nodes, M, kappa, i, lb, NumCut, lambda, master_time);
+            err = (ub - lb) / (ub + 1e-8);
+            // saving and printing the status
+            solver_status.iter = i;
+            solver_status.abs_err = ub - lb;
+            solver_status.rel_err = (ub - lb)/(ub + 1e-8);
+            solver_status.num_cut = NumCut;
+            solver_status.nlp_time = duration.count();
+            solver_status.mip_time = master_time;
+            if (display){
+                solver_status.print_status();
+            }
+
+
         }
 
         MPI_Bcast(delta.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         MPI_Bcast(&err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
         if (err <= eps) {
-            if(rank == 0) std :: cerr << "dipoa terminated successfully" << endl;
+
+            if (rank == 0) std::cerr << "dipoa terminated successfully" << endl;
+            x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
+            res.setXOpt(x);
+            res.setMaxIter(i);
+            res.setExitFlag(1);
+            res.setObjOpt(lb);
+
             break;
         }
     }
-    x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
-    return x;
+    auto end_ccp = std::chrono::high_resolution_clock::now();
+    auto duration_ccp = std::chrono::duration_cast<std::chrono::milliseconds>(end_ccp - start_ccp);
+    res.setMaxTime(duration_ccp.count());
+    return res;
 }
 
+Vec DCCP::sfp(Vec &x, int &rank) {
+    const int n = x.size();
+    Vec delta(n, 1);
+    delta.setZero();
+    int max_iter = 0;
+    bool sfp = true;
+    cout << "SFP is running ..." << endl;
+
+    x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter, sfp);
+    cout << "SFP converged " << endl;
+    Vec warm_delta(n, 1);
+    warm_delta.setZero();
+    Scalar _temp;
+
+
+    x = x.array().abs();
+
+    for (int i = 0; i < kappa; ++i) {
+
+        _temp = x.maxCoeff();
+        for (int j = 0; j < n; ++j) {
+
+            if (x[j] == _temp) {
+
+                warm_delta[j] = 1;
+                x[j] = -1;
+                break;
+            }
+
+        }
+
+    }
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    return warm_delta;
+}
 
 int DCCP::getN() const {
     return N;
@@ -143,42 +195,4 @@ void DCCP::setLambda(Scalar lambda) {
     DCCP::lambda = lambda;
 }
 
-Vec DCCP::sfp(Vec &x, int &rank) {
-    const int n = x.size();
-    Vec delta(n,1); delta.setZero();
-    int max_iter = 0;
-    bool sfp = true;
-    cout << "SFP is running ..." << endl;
 
-    x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter, sfp);
-    cout << "SFP converged " << endl;
-    Vec warm_delta(n,1); warm_delta.setZero();
-    Scalar _temp;
-
-
-   x = x.array().abs();
-
-   for (int i = 0; i < kappa; ++i) {
-
-       _temp = x.maxCoeff();
-       for (int j = 0; j < n ; ++j) {
-
-           if (x[j] == _temp) {
-
-               warm_delta[j] = 1;
-               x[j] = -1;
-               break;
-           }
-
-       }
-
-
-
-
-   }
-    MPI_Barrier(MPI_COMM_WORLD);
-//   std :: cerr << " x:" << x << endl;
-//   std :: cerr << " delta: "<<warm_delta << endl;
-
-    return warm_delta;
-}

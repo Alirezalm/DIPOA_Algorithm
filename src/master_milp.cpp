@@ -46,12 +46,12 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
     IloExpr soc(env);
     Scalar f_x;
     int k = -1;
-    for (int j = 0; j < current_iter * N; ++j) {
+    for (int j = 0; j < (current_iter + 1) * N; ++j) {
         k += 1;
         f_x = StoragePool.obj_value_storage[j];
         foc = dot_prod(StoragePool.grad_storage[j], X[k], StoragePool.x_storage[j], env, n);
         soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(X[k], StoragePool.x_storage[j], env, n);
-        model.add(alpha[k] >= f_x + foc + 0* soc);
+        model.add(alpha[k] >= f_x + foc + 0*soc);
         if (k == N - 1) k = -1;
 
     }
@@ -80,7 +80,7 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 //
     cplex.setParam(IloCplex::Param::MIP::Display, 0);
     cplex.setParam(IloCplex::Param::ParamDisplay, 0);
-    cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-8);
+    cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-5);
 
     NumCut = current_iter * N;
     auto start = std::chrono::high_resolution_clock::now(); // start measuring time
