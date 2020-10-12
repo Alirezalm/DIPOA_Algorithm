@@ -1,2 +1,2 @@
 # DIPOA_Algorithm
-DIstributed Primal Outer Approximation (DIPOA) Algorithm for Cardinality Constrained Problems (CCP).
+This solver solves the Distributed Cardinality Constrained Programming (DCCP) problems by means of DIstributed Primal Outer Approximation (DIPOA) Algorithm.
