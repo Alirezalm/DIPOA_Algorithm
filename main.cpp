@@ -15,8 +15,15 @@ int main(int argc, char *argv[]) {
     int rank, total;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // get MPI rank
     MPI_Comm_size(MPI_COMM_WORLD, &total); // get MPI size
-    if (rank == 0) cout << "MPI IMPLEMENTATION OF ADMM ALGORITHM FOR " << total << " NODES" << endl;
-
+    if (rank == 0) {
+	    cout << "MPI IMPLEMENTATION OF DIPOA ALGORITHM FOR " << total << " NODES" << endl;
+	    cout << "DIPOA is applied to Distributed Cardinality Constrained Programming (DCCP) problems" << endl;
+	    cout << "General form: " << endl;
+	    cout << "min_x \sum_i^N f_i(x)" << endl;
+	    cout << "s.t. card(x) <= kappa" << endl;
+	    cout << " " << endl;
+	    cout << "This program implements the Distributed Sparse Logistic Regression (DSLR) problem" << endl;
+    }
     int m , n;
     if (rank == 0){
         cout << "number of rows? ";

@@ -3,7 +3,7 @@
 //
 
 #include "../includes/unc_solver.h"
-#include "../includes/eigen3/Eigen/IterativeLinearSolvers"
+#include "eigen3/Eigen/IterativeLinearSolvers"
 
 
 Scalar line_search(ObjType &obj_func, GradType &grad, Vec &step, Vec &x){
