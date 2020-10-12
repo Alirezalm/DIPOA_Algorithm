@@ -97,7 +97,7 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 //
     cplex.setParam(IloCplex::Param::MIP::Display, 0);
     cplex.setParam(IloCplex::Param::ParamDisplay, 0);
-    cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-5);
+    cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-3);
 
     NumCut = current_iter * N;
     auto start = std::chrono::high_resolution_clock::now(); // start measuring time

@@ -19,7 +19,7 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
 }
 
 Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
-    double eps = 1e-3;
+    double eps = 5e-4;
     int max_nodes;
 
     MPI_Status status;

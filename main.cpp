@@ -57,6 +57,19 @@ int main(int argc, char *argv[]) {
     }
     MPI_Bcast(&kappa, 1, MPI_INT, 0, MPI_COMM_WORLD);
     Scalar lambda = 0.5; //regularization parameter
+    if (rank == 0){
+        cout << "regularization param? ";
+        std::cin >> lambda;
+    }
+    MPI_Bcast(&lambda, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    int sfp_flag;
+    if (rank == 0){
+        cout << "SFP? (0 or 1) ";
+        std::cin >> sfp_flag;
+    }
+    MPI_Bcast(&sfp_flag, 1, MPI_INT, 0, MPI_COMM_WORLD);
+
+    
     ObjType obj_func = log_reg_obj(X, y, m, lambda); //logistic objective function
     GradType grad_func = log_reg_grad(X, y, lambda); // logistic gradient
     HessType hess_func = log_reg_hess(X, lambda); // logistic hessian
@@ -66,7 +79,9 @@ int main(int argc, char *argv[]) {
     int N = total;
     // creating DCCP problem
     DCCP Problem(obj_func, grad_func, hess_func, N, kappa, M, lambda);
-//    delta = Problem.sfp(theta, rank);
+   if(sfp_flag){
+    delta = Problem.sfp(theta, rank);
+   }
     Results res = Problem.dipoa(delta, rank, true); // solving the problem
 
     if (rank == 0) res.print();
