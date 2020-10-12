@@ -16,7 +16,16 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // get MPI rank
     MPI_Comm_size(MPI_COMM_WORLD, &total); // get MPI size
     if (rank == 0) cout << "MPI IMPLEMENTATION OF ADMM ALGORITHM FOR " << total << " NODES" << endl;
-    int m = 1250, n = 100;
+
+    int m , n;
+    if (rank == 0){
+        cout << "number of rows? ";
+        std::cin >> m;
+        cout << "number of cols? ";
+        std::cin >> n;
+    }
+    MPI_Bcast(&m, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&n, 1, MPI_INT, 0, MPI_COMM_WORLD);
     if (rank == 0) {
         cout << "dataset info: " << endl;
         cout << "total number of rows and columns " << total * m << " x " << n << endl;
@@ -41,7 +50,12 @@ int main(int argc, char *argv[]) {
 
     // problem parameters and functions
     Scalar M = 0.9;
-    int kappa = 10;
+    int kappa;
+    if (rank == 0){
+        cout << "How many non_zeros? ";
+        std::cin >> kappa;
+    }
+    MPI_Bcast(&kappa, 1, MPI_INT, 0, MPI_COMM_WORLD);
     Scalar lambda = 0.5; //regularization parameter
     ObjType obj_func = log_reg_obj(X, y, m, lambda); //logistic objective function
     GradType grad_func = log_reg_grad(X, y, lambda); // logistic gradient

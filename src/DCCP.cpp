@@ -110,7 +110,7 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
             if (event.is_generated()){
                 ++event_counter;
                 event.event_storage[event_counter] = i;
-                cout << "SOC is added at iter: " << event_counter << endl;
+                cout << "SOC is added at iter: " << event_counter + 1 << endl;
             }
 
             // saving and printing the status
@@ -133,7 +133,7 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
         if (err <= eps) {
 
             if (rank == 0) std::cerr << "dipoa terminated successfully" << endl;
-            x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
+//            x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
             res.setXOpt(x);
             res.setMaxIter(i);
             res.setExitFlag(1);
