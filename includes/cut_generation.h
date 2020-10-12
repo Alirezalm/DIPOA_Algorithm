@@ -5,6 +5,7 @@
 #ifndef DIPOA_CUT_GENERATION_H
 #define DIPOA_CUT_GENERATION_H
 #include "external_libs.h"
+#include "results.h"
 
 class CutStorage{
 public:
@@ -15,7 +16,7 @@ public:
     void add_cut_eig(Scalar &local_eig, int current_iter);
 
     friend Vec  master_milp(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
-                            Scalar &lambda, double &elapsed_time);
+                            Scalar &lambda, double &elapsed_time, EventGen &event);
 private:
     vector<Scalar> obj_value_storage;
     vector<Vec> grad_storage;

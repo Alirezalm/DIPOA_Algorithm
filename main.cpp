@@ -11,7 +11,6 @@
 int main(int argc, char *argv[]) {
 
     MPI_Init(&argc, &argv);
-
     srand(clock());
     int rank, total;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // get MPI rank

@@ -47,14 +47,16 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
     CutStorage StoragePool(obj_val_storage, grad_val_storage, x_val_storage, eig_val_storage); // storage pool class
     Results res;
     SolverData solver_status;
+    vector<int> v(max_iter);
+    EventGen event(v);
     double elapse_time;
     double master_time;
 
     double lb = -1e20;
     double ub = 1e20;
     double _ub_temp;
-
-    double err;
+    int event_counter = 0;
+    double err = 10;
     auto start_ccp = std::chrono::high_resolution_clock::now();
     for (int i = 0; i < max_iter; ++i) {//main loop
 
@@ -99,10 +101,18 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
                 StoragePool.add_cut_x(x, (i * N) + j);
                 _ub_temp += f; // total primal objective function
             }
-            ub = std::min(ub, _ub_temp); // updating the upper bound
 
-            delta = master_milp(StoragePool, max_nodes, M, kappa, i, lb, NumCut, lambda, master_time);
+            ub = std::min(ub, _ub_temp); // updating the upper bound
+            delta = master_milp(StoragePool, max_nodes, M, kappa, i, lb, NumCut, lambda, master_time, event);
+            event.old_gap = err;
             err = (ub - lb) / (ub + 1e-8);
+            event.current_gap = err;
+            if (event.is_generated()){
+                ++event_counter;
+                event.event_storage[event_counter] = i;
+                cout << "SOC is added at iter: " << event_counter << endl;
+            }
+
             // saving and printing the status
             solver_status.iter = i;
             solver_status.abs_err = ub - lb;

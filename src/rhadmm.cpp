@@ -40,7 +40,7 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
     z.setZero();
     z_old.setZero();
 
-    Scalar rho = 2;
+    Scalar rho = 1;
     Vec x_rcv(n, 1), y_rcv(n, 1), z_rcv(n, 1);
     int max_nodes;
     MPI_Comm_size(MPI_COMM_WORLD, &max_nodes);

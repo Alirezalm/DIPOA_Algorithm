@@ -96,11 +96,21 @@ void SolverData::print_status() {
     }
     std :: cerr<<"iter: " << iter << " abs-err: " << abs_err << " rel-err: " << rel_err << " num-cuts: " <<
     num_cut << " nlp-time: "<< nlp_time << " ms"<< " mip-time: " << mip_time << " ms" <<endl;
-
-//    std::cerr << "Iter " << i << " lb " << lb << " ub " << ub << " rel-err " << err << " abs-err " << ub - lb
-//              << " NumCut "
-//              << NumCut
-//              << " StorageSize " << ((i + 1) * (N + 2 * (N * n)) * 8) * 1e-6 << " mb" <<
-//              " PrimalIter " << max_iter_rhadmm << " MIPTime "
-//              << master_time << "ms" << " NLPTime " << elapse_time << " ms" << endl;
 }
+
+EventGen::EventGen(vector<int> &event_storage) {
+    old_gap = 1e10;
+    current_gap = 1e20;
+    threshold = 1e-3;
+    this -> event_storage  = event_storage;
+}
+
+bool EventGen::is_generated() const {
+    if (old_gap - current_gap <= threshold){
+        return true;
+    }else{
+        return false;
+    }
+
+}
+

@@ -4,7 +4,7 @@
 
 #include "../includes/master_milp.h"
 
-
+bool is_member(int key, vector<int> &v);
 IloExpr quad_cut_expr(IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
     IloExpr my_sum(env);
     for (int i = 0; i < n; ++i) {
@@ -14,7 +14,7 @@ IloExpr quad_cut_expr(IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
 }
 
 Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
-                Scalar &lambda, double &elapsed_time) {
+                Scalar &lambda, double &elapsed_time, EventGen &event) {
 
     int n = StoragePool.x_storage[0].size();
     IloEnv env;
@@ -42,17 +42,34 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
     model.add(obj);
 
 
+    int soc_flag;
+
+    int _iter_counter = 0;
     IloExpr foc(env);
     IloExpr soc(env);
     Scalar f_x;
     int k = -1;
     for (int j = 0; j < (current_iter + 1) * N; ++j) {
         k += 1;
+        if(!event.event_storage.empty()){
+            if ((_iter_counter != 0) && is_member(_iter_counter, event.event_storage)) {
+                soc_flag = 1;
+//                cout << "SOC is added at iter: " << _iter_counter << endl;
+            } else{
+                soc_flag = 0;
+            }
+        }else{
+            soc_flag = 0;
+        }
+
         f_x = StoragePool.obj_value_storage[j];
         foc = dot_prod(StoragePool.grad_storage[j], X[k], StoragePool.x_storage[j], env, n);
         soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(X[k], StoragePool.x_storage[j], env, n);
-        model.add(alpha[k] >= f_x + foc + 0*soc);
-        if (k == N - 1) k = -1;
+        model.add(alpha[k] >= f_x + foc + soc_flag * soc);
+        if (k == N - 1) {
+            k = -1;
+            ++_iter_counter;
+        }
 
     }
 
@@ -105,4 +122,15 @@ IloExpr dot_prod(Vec &grad, IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
         sum += grad[i] * (x[i] - x_k[i]);
     }
     return sum;
+}
+
+bool is_member(int key, vector<int> &v){
+
+    for (int i = 0; i < v.size(); ++i) {
+        if (key == v[i]){
+
+            return true;
+        }
+    }
+    return false;
 }

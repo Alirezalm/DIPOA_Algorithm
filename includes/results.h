@@ -58,4 +58,15 @@ public:
     double nlp_time;
 
 };
+
+class EventGen{
+
+public:
+    EventGen(vector<int> &event_storage);
+    bool is_generated() const;
+    double old_gap;
+    double current_gap;
+    double threshold;
+    vector<int> event_storage;
+};
 #endif //DIPOA_RESULTS_H
