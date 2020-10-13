@@ -90,6 +90,7 @@ int main(int argc, char *argv[]) {
     delta = Problem.sfp(theta, rank);
    }
     Results res = Problem.dipoa(delta, rank, true); // solving the problem
+    
 
     if (rank == 0) res.print();
 //    if (rank == 0) cout << hess_func(theta).eigenvalues().real().minCoeff() << endl;
