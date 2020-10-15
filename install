@@ -32,9 +32,9 @@ then
     	echo "end"
 	fi	
 else
-    echo "Do you want to run the application? (yes/no)"
+    
 
-read ans
+ ans=yes
 
 if [ $ans == "yes" ]
 then

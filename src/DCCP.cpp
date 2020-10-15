@@ -19,7 +19,7 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
 }
 
 Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
-    double eps = 1e-4;
+    double eps = 5e-4;
     int max_nodes;
 
     MPI_Status status;
@@ -182,6 +182,7 @@ Vec DCCP::sfp(Vec &x, int &rank) {
         }
 
     }
+   if(rank==0) cout << "WarmDelta " << warm_delta.sum() << endl;
     MPI_Barrier(MPI_COMM_WORLD);
 
     return warm_delta;
