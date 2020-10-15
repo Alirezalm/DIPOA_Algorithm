@@ -101,12 +101,12 @@ void SolverData::print_status() {
 EventGen::EventGen(vector<int> &event_storage) {
     old_gap = 1e10;
     current_gap = 1e20;
-    threshold = 1e-3;
+    threshold = 1e-2;
     this -> event_storage  = event_storage;
 }
 
 bool EventGen::is_generated() const {
-    if (old_gap - current_gap <= threshold){
+    if ((old_gap - current_gap)/old_gap <= threshold){
         return true;
     }else{
         return false;

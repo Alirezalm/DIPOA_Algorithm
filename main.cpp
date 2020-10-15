@@ -43,10 +43,10 @@ int main(int argc, char *argv[]) {
     // Random data generation
     Mat X = Mat::Random(m, n);
     for (int i = 0; i < n; ++i) {
-        X.col(i) = X.col(i) / X.col(i).norm();
-    }
+    X.col(i) = X.col(i) / X.col(i).norm();
+   }
     Vec theta = Vec::Random(n, 1);
-    Vec y = Vec::Random(m, 1);
+    Vec y = Vec::Random(m, 1) ;
     for (int i = 0; i < m; ++i) {
         if (y[i] <= 0) {
             y[i] = 1.0;

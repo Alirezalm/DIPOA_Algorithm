@@ -40,7 +40,7 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
     z.setZero();
     z_old.setZero();
 
-    Scalar rho = 1;
+    Scalar rho = 1.3;
     Vec x_rcv(n, 1), y_rcv(n, 1), z_rcv(n, 1);
     int max_nodes;
     MPI_Comm_size(MPI_COMM_WORLD, &max_nodes);
@@ -90,8 +90,8 @@ Vec rhadmm(ObjType &obj, GradType &grad, HessType &hess, Vec &x, int &rank, Scal
         MPI_Bcast(&t, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
-//        if (rank == 0) cout<< "iter: " << i << " t: " << t << " s: " << s << " f: " << obj(x) <<
-//        " z: " << z.norm() << " z_old " << z_old.norm() << " x: " << x.norm() <<endl;
+       // if (rank == 0) cout<< "iter: " << i << " t: " << t << " s: " << s << " f: " << obj(x) <<
+        //" z: " << z.norm() << " z_old " << z_old.norm() << " x: " << x.norm() <<endl;
         if ((t <= eps) && ( s <= (eps/2.0))){
             max_iter_num = i;
             break;

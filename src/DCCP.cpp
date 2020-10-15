@@ -19,7 +19,7 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
 }
 
 Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
-    double eps = 5e-3;
+    double eps = 1e-4;
     int max_nodes;
 
     MPI_Status status;
@@ -110,8 +110,10 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
             if (event.is_generated()){
                 ++event_counter;
                 event.event_storage[event_counter] = i;
-                cout << "SOC is added at iter: " << event_counter + 1 << endl;
-            }
+                cout << "Total SOC : " << event_counter << endl;
+                cout << "SOC added at iter : " << i + 1 << endl;
+
+	    }
 
             // saving and printing the status
             solver_status.iter = i;
