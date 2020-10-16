@@ -18,15 +18,15 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 
     int n = StoragePool.x_storage[0].size();
     IloEnv env;
-    vector<IloNumVarArray> X(N);
+//    vector<IloNumVarArray> X(N);
 
     IloModel model(env);
     IloNumVarArray alpha(env, N, -1e5, 1e5, ILOFLOAT);
 
-    for (int i = 0; i < N; ++i) {
-        IloNumVarArray x(env, n, -1e5, 1e5, ILOFLOAT);
-        X[i] = x;
-    }
+//    for (int i = 0; i < N; ++i) {
+//        IloNumVarArray x(env, n, -1e5, 1e5, ILOFLOAT);
+//        X[i] = x;
+//    }
     IloNumVarArray z(env, n, -1e5, 1e5, ILOFLOAT);
     IloNumVarArray delta(env, n, 0.0, 1.0, ILOBOOL);
 //
@@ -63,8 +63,8 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
         }
 
         f_x = StoragePool.obj_value_storage[j];
-        foc = dot_prod(StoragePool.grad_storage[j], X[k], StoragePool.x_storage[j], env, n);
-        soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(X[k], StoragePool.x_storage[j], env, n);
+        foc = dot_prod(StoragePool.grad_storage[j], z, StoragePool.x_storage[j], env, n);
+        soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(z, StoragePool.x_storage[j], env, n);
         model.add(alpha[k] >= f_x + foc + soc_flag * soc);
         if (k == N - 1) {
             k = -1;
@@ -73,11 +73,11 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 
     }
 
-    for (int j = 0; j < N; ++j) {
-        for (int i = 0; i < n; ++i) {
-            model.add(IloAbs(X[j][i] - z[i]) == 0);
-        }
-    }
+//    for (int j = 0; j < N; ++j) {
+//        for (int i = 0; i < n; ++i) {
+//            model.add(IloAbs(X[j][i] - z[i]) == 0);
+//        }
+//    }
 
     for (int i = 0; i < n; ++i) {
         model.add(z[i] <= M * delta[i]);
