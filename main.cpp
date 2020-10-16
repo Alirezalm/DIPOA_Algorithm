@@ -7,6 +7,7 @@
  */
 #include "includes/DCCP.h"
 #include "test_functions/log_reg_random.h"
+#include <random>
 
 int main(int argc, char *argv[]) {
 
@@ -41,12 +42,29 @@ int main(int argc, char *argv[]) {
         cout << "total size per node: " << n * m * 8 * 1e-6 << " mb" << endl;
     }
     // Random data generation
-    Mat X = Mat::Random(m, n);
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0,1);
+    Mat X (m,n);
+    for (int i = 0; i < m; ++i) {
+        for (int j = 0; j < n; ++j) {
+            X(i,j) =  distribution(generator);
+        }
+    }
+
+
     for (int i = 0; i < n; ++i) {
     X.col(i) = X.col(i) / X.col(i).norm();
    }
-    Vec theta = Vec::Random(n, 1);
-    Vec y = Vec::Random(m, 1) ;
+    Vec theta(n,1);
+    Vec y (m,1);
+
+    for (int i = 0; i < n; ++i) {
+        theta[i] =  distribution(generator);
+
+    }
+    for (int i = 0; i < m; ++i) {
+        y[i] =  distribution(generator);
+    }
     for (int i = 0; i < m; ++i) {
         if (y[i] <= 0) {
             y[i] = 1.0;
@@ -90,10 +108,10 @@ int main(int argc, char *argv[]) {
     delta = Problem.sfp(theta, rank);
    }
     Results res = Problem.dipoa(delta, rank, true); // solving the problem
-    
+
 
     if (rank == 0) res.print();
-//    if (rank == 0) cout << hess_func(theta).eigenvalues().real().minCoeff() << endl;
+//   cout << X.col(1).mean() << endl;
     MPI_Finalize();
     return 0;
 }
