@@ -19,7 +19,7 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
 }
 
 Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
-    double eps = 1e-2;
+    double eps = 1e-4;
     int max_nodes;
 
     MPI_Status status;
@@ -39,6 +39,7 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
     int NumCut = 0;
     const int max_iter = 300;
     int max_iter_rhadmm;
+    double max_time = 600;
     // for initialization of the storage pool
     vector<Scalar> obj_val_storage(max_iter * max_nodes);
     vector<Scalar> eig_val_storage(max_iter * max_nodes);
@@ -103,7 +104,7 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
             }
 
             ub = std::min(ub, _ub_temp); // updating the upper bound
-            delta = master_milp(StoragePool, max_nodes, M, kappa, i, lb, NumCut, lambda, master_time, event);
+            delta = master_milp_gurobi(StoragePool, max_nodes, M, kappa, i, lb, NumCut, lambda, master_time, event);
             event.old_gap = err;
             err = (ub - lb) / (ub + 1e-8);
             event.current_gap = err;
@@ -132,8 +133,11 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
         MPI_Bcast(delta.data(), n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
         MPI_Bcast(&err, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        if (err <= eps) {
-
+        auto end_ccp_iter = std::chrono::high_resolution_clock::now();
+        auto duration_ccp_iter = std::chrono::duration_cast<std::chrono::seconds>(end_ccp_iter - start_ccp);
+        if (rank == 0) cout << "Elapsed time: " << duration_ccp_iter.count() << endl;
+//        if (err <= eps) {
+        if(duration_ccp_iter.count() >= max_time){
             if (rank == 0) std::cerr << "dipoa terminated successfully" << endl;
 //            x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
             res.setXOpt(x);

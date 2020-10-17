@@ -4,49 +4,158 @@
 
 #include "../includes/master_milp.h"
 
+
 bool is_member(int key, vector<int> &v);
-IloExpr quad_cut_expr(IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
-    IloExpr my_sum(env);
+//IloExpr quad_cut_expr(IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
+//    IloExpr my_sum(env);
+//    for (int i = 0; i < n; ++i) {
+//        my_sum += IloPower((x[i] - x_k[i]), 2);
+//    }
+//    return my_sum;
+//}
+
+GRBQuadExpr quad_cut_expr(GRBVar *x, Vec &x_k, int &n) {
+    GRBQuadExpr my_sum;
     for (int i = 0; i < n; ++i) {
-        my_sum += IloPower((x[i] - x_k[i]), 2);
+        my_sum += (x[i] - x_k[i])*(x[i] - x_k[i]);
     }
     return my_sum;
 }
 
-Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
+//Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
+//                Scalar &lambda, double &elapsed_time, EventGen &event) {
+//
+//    int n = StoragePool.x_storage[0].size();
+//    IloEnv env;
+////    vector<IloNumVarArray> X(N);
+//
+//    IloModel model(env);
+//    IloNumVarArray alpha(env, N, -1e5, 1e5, ILOFLOAT);
+//
+////    for (int i = 0; i < N; ++i) {
+////        IloNumVarArray x(env, n, -1e5, 1e5, ILOFLOAT);
+////        X[i] = x;
+////    }
+//    IloNumVarArray z(env, n, -1e5, 1e5, ILOFLOAT);
+//    IloNumVarArray delta(env, n, 0.0, 1.0, ILOBOOL);
+////
+//    IloObjective obj;
+//    IloExpr expr(env);
+//
+//    for (int i = 0; i < N; ++i) {
+//        expr += alpha[i];
+//    }
+//
+//    obj = IloMinimize(env, expr);
+//
+//    model.add(obj);
+//
+//
+//    int soc_flag;
+//
+//    int _iter_counter = 0;
+//    IloExpr foc(env);
+//    IloExpr soc(env);
+//    Scalar f_x;
+//    int k = -1;
+//    for (int j = 0; j < (current_iter + 1) * N; ++j) {
+//        k += 1;
+//        if(!event.event_storage.empty()){
+//            if ((_iter_counter != 0) && is_member(_iter_counter, event.event_storage)) {
+//                soc_flag = 1;
+////                cout << "SOC is added at iter: " << _iter_counter << endl;
+//            } else{
+//                soc_flag = 0;
+//            }
+//        }else{
+//            soc_flag = 0;
+//        }
+//
+//        f_x = StoragePool.obj_value_storage[j];
+//        foc = dot_prod(StoragePool.grad_storage[j], z, StoragePool.x_storage[j], env, n);
+//        soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(z, StoragePool.x_storage[j], env, n);
+//        model.add(alpha[k] >= f_x + foc + soc_flag * soc);
+//        if (k == N - 1) {
+//            k = -1;
+//            ++_iter_counter;
+//        }
+//
+//    }
+//
+////    for (int j = 0; j < N; ++j) {
+////        for (int i = 0; i < n; ++i) {
+////            model.add(IloAbs(X[j][i] - z[i]) == 0);
+////        }
+////    }
+//
+//    for (int i = 0; i < n; ++i) {
+//        model.add(z[i] <= M * delta[i]);
+//        model.add(z[i] >= -M * delta[i]);
+//    }
+//
+//    IloExpr sum_delta(env);
+//    for (int i = 0; i < n; ++i) {
+//        sum_delta += delta[i];
+//    }
+//
+//    model.add(sum_delta <= kappa);
+////
+////
+//
+//    IloCplex cplex(model);
+////
+//    cplex.setParam(IloCplex::Param::MIP::Display, 0);
+//    cplex.setParam(IloCplex::Param::ParamDisplay, 0);
+//   // cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-4);
+//
+//    NumCut = current_iter * N;
+//    auto start = std::chrono::high_resolution_clock::now(); // start measuring time
+//    cplex.solve();
+//    auto end = std::chrono::high_resolution_clock::now();
+//    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+//    elapsed_time = duration.count();
+//    Vec _delta(n, 1);
+//    for (int i = 0; i < n; ++i) {
+//        _delta[i] = abs(cplex.getValue(delta[i]));
+//    }
+//
+//
+//    lb = cplex.getObjValue();
+//    env.end();
+//    return _delta;
+//}
+
+Vec master_milp_gurobi(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
                 Scalar &lambda, double &elapsed_time, EventGen &event) {
 
     int n = StoragePool.x_storage[0].size();
-    IloEnv env;
-//    vector<IloNumVarArray> X(N);
+    GRBEnv env = GRBEnv(true);
+    env.start();
 
-    IloModel model(env);
-    IloNumVarArray alpha(env, N, -1e5, 1e5, ILOFLOAT);
+    GRBModel model = GRBModel(env);
 
-//    for (int i = 0; i < N; ++i) {
-//        IloNumVarArray x(env, n, -1e5, 1e5, ILOFLOAT);
-//        X[i] = x;
-//    }
-    IloNumVarArray z(env, n, -1e5, 1e5, ILOFLOAT);
-    IloNumVarArray delta(env, n, 0.0, 1.0, ILOBOOL);
-//
-    IloObjective obj;
-    IloExpr expr(env);
+    GRBVar *alpha = 0;
+    GRBVar *z = 0;
+    GRBVar *delta = 0;
+    alpha = model.addVars(N, GRB_CONTINUOUS);
 
+
+   z = model.addVars(n, GRB_CONTINUOUS);
+   delta = model.addVars(n, GRB_BINARY);
+
+
+    GRBLinExpr _obj;
     for (int i = 0; i < N; ++i) {
-        expr += alpha[i];
+        _obj += alpha[i];
     }
-
-    obj = IloMinimize(env, expr);
-
-    model.add(obj);
+    model.setObjective(_obj, GRB_MINIMIZE);
 
 
     int soc_flag;
 
     int _iter_counter = 0;
-    IloExpr foc(env);
-    IloExpr soc(env);
+    GRBLinExpr foc;
+    GRBQuadExpr soc;
     Scalar f_x;
     int k = -1;
     for (int j = 0; j < (current_iter + 1) * N; ++j) {
@@ -63,9 +172,16 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
         }
 
         f_x = StoragePool.obj_value_storage[j];
-        foc = dot_prod(StoragePool.grad_storage[j], z, StoragePool.x_storage[j], env, n);
-        soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(z, StoragePool.x_storage[j], env, n);
-        model.add(alpha[k] >= f_x + foc + soc_flag * soc);
+        foc = dot_prod(StoragePool.grad_storage[j], z, StoragePool.x_storage[j], n);
+
+        soc = 0.5 * StoragePool.eig_storage[j] * quad_cut_expr(z, StoragePool.x_storage[j], n);
+        if (soc_flag){
+            model.addQConstr(alpha[k] >= f_x + foc + soc);
+        }else{
+            model.addConstr(alpha[k] >= f_x + foc);
+        }
+
+
         if (k == N - 1) {
             k = -1;
             ++_iter_counter;
@@ -80,50 +196,54 @@ Vec master_milp(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, int curr
 //    }
 
     for (int i = 0; i < n; ++i) {
-        model.add(z[i] <= M * delta[i]);
-        model.add(z[i] >= -M * delta[i]);
+        model.addConstr(z[i] <= M * delta[i]);
+        model.addConstr(z[i] >= -M * delta[i]);
     }
 
-    IloExpr sum_delta(env);
+    GRBLinExpr sum_delta;
     for (int i = 0; i < n; ++i) {
         sum_delta += delta[i];
     }
 
-    model.add(sum_delta <= kappa);
+    model.addConstr(sum_delta <= kappa);
 //
 //
 
-    IloCplex cplex(model);
-//
-    cplex.setParam(IloCplex::Param::MIP::Display, 0);
-    cplex.setParam(IloCplex::Param::ParamDisplay, 0);
-   // cplex.setParam(IloCplex::Param::MIP::Tolerances::MIPGap, 1e-4);
 
+
+    model.set("OutputFlag", "0");
     NumCut = current_iter * N;
     auto start = std::chrono::high_resolution_clock::now(); // start measuring time
-    cplex.solve();
+    model.optimize();
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     elapsed_time = duration.count();
+
     Vec _delta(n, 1);
     for (int i = 0; i < n; ++i) {
-        _delta[i] = abs(cplex.getValue(delta[i]));
+        _delta[i] = delta[i].get(GRB_DoubleAttr_X);
     }
 
 
-    lb = cplex.getObjValue();
-    env.end();
+    lb = model.get(GRB_DoubleAttr_ObjVal);
+
     return _delta;
 }
 
-IloExpr dot_prod(Vec &grad, IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
-    IloExpr sum(env);
+//IloExpr dot_prod(Vec &grad, IloNumVarArray &x, Vec &x_k, IloEnv env, int &n) {
+//    IloExpr sum(env);
+//    for (int i = 0; i < n; ++i) {
+//        sum += grad[i] * (x[i] - x_k[i]);
+//    }
+//    return sum;
+//}
+GRBLinExpr dot_prod(Vec &grad, GRBVar *x, Vec &x_k, int &n) {
+    GRBLinExpr sum;
     for (int i = 0; i < n; ++i) {
         sum += grad[i] * (x[i] - x_k[i]);
     }
     return sum;
 }
-
 bool is_member(int key, vector<int> &v){
 
     for (int i = 0; i < v.size(); ++i) {

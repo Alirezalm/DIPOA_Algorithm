@@ -15,8 +15,11 @@ public:
     void add_cut_x(Vec &local_x, int current_iter);
     void add_cut_eig(Scalar &local_eig, int current_iter);
 
-    friend Vec  master_milp(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
+//    friend Vec  master_milp(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
+//                            Scalar &lambda, double &elapsed_time, EventGen &event);
+    friend Vec  master_milp_gurobi(CutStorage &StoragePool,int &N, Scalar &M, int &kappa, int current_iter, double &lb, int &NumCut,
                             Scalar &lambda, double &elapsed_time, EventGen &event);
+
 private:
     vector<Scalar> obj_value_storage;
     vector<Vec> grad_storage;

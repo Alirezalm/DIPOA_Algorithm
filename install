@@ -3,12 +3,15 @@
 echo "Bash Script to Create DIPOA APPLICATION"
 echo "Author: Alireza Olama"
 
-options="-DIL_STD -O3 -w"
-cplex_path="/home/alireza/cplex/cplex/include"
-consert_path="/home/alireza/cplex/concert/include"
+options="-O3 -m64 -std=c++11"
+#cplex_path="/home/alireza/cplex/cplex/include"
+#consert_path="/home/alireza/cplex/concert/include"
 
-cplex_lib="/home/alireza/cplex/cplex/lib/x86-64_linux/static_pic"
-consert_lib="/home/alireza/cplex/concert/lib/x86-64_linux/static_pic"
+#cplex_lib="/home/alireza/cplex/cplex/lib/x86-64_linux/static_pic"
+#consert_lib="/home/alireza/cplex/concert/lib/x86-64_linux/static_pic"
+
+gurobi_path="/home/alireza/gurobi903/linux64/include"
+gurobi_lib="/home/alireza/gurobi903/linux64/lib"
 
 echo "Do you want to compile the application? (yes/no)"
 
@@ -17,7 +20,7 @@ read ans
 if [ $ans == "yes" ]
 then
     echo "Application is compiling..."
-    mpic++ $options  -I$cplex_path -I$consert_path -L$cplex_lib -L$consert_lib includes/*.h src/*.cpp test_functions/*.h utils/*.cpp  main.cpp -lilocplex -lconcert -lcplex -lm -lpthread -ldl -o dipoa
+    mpic++ $options -I$gurobi_path -L$gurobi_lib includes/*.h src/*.cpp test_functions/*.h utils/*.cpp  main.cpp -lgurobi_g++5.2 -lgurobi_c++ -lgurobi90   -o dipoa
     echo "done!"
     echo "Do you want to run the application? (yes/no)"
    

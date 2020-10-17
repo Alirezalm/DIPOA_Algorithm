@@ -13,6 +13,9 @@
 #include <cassert>
 #include <vector>
 #include <chrono>
+#include <gurobi_c++.h>
+//#include <ilcplex/ilocplex.h>
+
 using std::cout;
 using std::endl;
 using std::vector;
