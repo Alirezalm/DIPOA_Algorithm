@@ -19,7 +19,7 @@ DCCP::DCCP(ObjType &obj, GradType &grad, HessType &hess, int &N, int &kappa, Sca
 }
 
 Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
-    double eps = 1e-4;
+    double eps = 1e-3;
     int max_nodes;
 
     MPI_Status status;
@@ -136,8 +136,8 @@ Results DCCP::dipoa(Vec &delta, int &rank, bool display) {
         auto end_ccp_iter = std::chrono::high_resolution_clock::now();
         auto duration_ccp_iter = std::chrono::duration_cast<std::chrono::seconds>(end_ccp_iter - start_ccp);
         if (rank == 0) cout << "Elapsed time: " << duration_ccp_iter.count() << endl;
-//        if (err <= eps) {
-        if(duration_ccp_iter.count() >= max_time){
+        if (err <= eps) {
+//        if(duration_ccp_iter.count() >= max_time){
             if (rank == 0) std::cerr << "dipoa terminated successfully" << endl;
 //            x = rhadmm(obj, grad, hess, x, rank, M, delta, max_iter_rhadmm, false);
             res.setXOpt(x);
