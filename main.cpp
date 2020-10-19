@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
     }
 
     // problem parameters and functions
-    Scalar M = 0.9;
+    Scalar M = 5;
     int kappa;
     if (rank == 0){
         cout << "How many non_zeros? ";
