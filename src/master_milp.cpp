@@ -212,6 +212,7 @@ Vec master_milp_gurobi(CutStorage &StoragePool, int &N, Scalar &M, int &kappa, i
 
 
     model.set("OutputFlag", "0");
+    model.set("MIPGap","1e-5");
     NumCut = current_iter * N;
     auto start = std::chrono::high_resolution_clock::now(); // start measuring time
     model.optimize();
