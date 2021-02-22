@@ -10,8 +10,8 @@ options="-O3 -m64 -std=c++11"
 #cplex_lib="/home/alireza/cplex/cplex/lib/x86-64_linux/static_pic"
 #consert_lib="/home/alireza/cplex/concert/lib/x86-64_linux/static_pic"
 
-gurobi_path="/home/alireza/gurobi903/linux64/include"
-gurobi_lib="/home/alireza/gurobi903/linux64/lib"
+gurobi_path="/home/alireza/gurobi911/linux64/include"
+gurobi_lib="/home/alireza/gurobi911/linux64/lib"
 
 echo "Do you want to compile the application? (yes/no)"
 
@@ -20,7 +20,7 @@ read ans
 if [ $ans == "yes" ]
 then
     echo "Application is compiling..."
-    mpic++ $options -I$gurobi_path -L$gurobi_lib includes/*.h src/*.cpp test_functions/*.h utils/*.cpp  main.cpp -lgurobi_g++5.2 -lgurobi_c++ -lgurobi90   -o dipoa
+    mpic++ $options -I$gurobi_path -L$gurobi_lib includes/*.h src/*.cpp test_functions/*.h utils/*.cpp  main.cpp -lgurobi_g++5.2 -lgurobi_c++ -lgurobi91   -o dipoa
     echo "done!"
     echo "Do you want to run the application? (yes/no)"
    
